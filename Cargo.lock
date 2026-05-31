@@ -92,6 +92,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "broadcast"
+version = "0.1.0"
+dependencies = [
+ "cipher 0.1.0",
+ "keygraph",
+ "secmem",
+ "thiserror",
+]
+
+[[package]]
 name = "bsv"
 version = "0.1.0"
 dependencies = [

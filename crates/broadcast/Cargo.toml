@@ -1,0 +1,15 @@
+[package]
+name = "broadcast"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GB 2623780 B: key-graph broadcast encryption with child-wraps-parent key items, eligible-only decryption, and the three rekeying strategies."
+
+[dependencies]
+thiserror = { workspace = true }
+secmem = { path = "../secmem" }
+cipher = { path = "../cipher" }
+keygraph = { path = "../keygraph" }
+
+[lints]
+workspace = true
