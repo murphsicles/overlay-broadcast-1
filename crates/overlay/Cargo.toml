@@ -1,0 +1,20 @@
+[package]
+name = "overlay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "EP 4 046 048 B1: an overlay key-graph over data-storage transactions, the first/second/third function key sets, the three claim-5 functions, and seed-isolated position-only signalling."
+
+[dependencies]
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+secmem = { path = "../secmem" }
+bsv = { path = "../bsv" }
+ckd = { path = "../ckd" }
+cipher = { path = "../cipher" }
+keygraph = { path = "../keygraph" }
+hkdf = { workspace = true }
+sha2 = { workspace = true }
+
+[lints]
+workspace = true
