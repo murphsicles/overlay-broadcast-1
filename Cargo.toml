@@ -3,7 +3,7 @@
 # depend on upper crates (enforced by review + cargo metadata cycle analysis).
 [workspace]
 resolver = "2"
-members = ["xtask"]
+members = ["xtask", "crates/secmem"]
 
 [workspace.package]
 edition = "2021"

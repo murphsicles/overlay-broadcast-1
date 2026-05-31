@@ -1,0 +1,27 @@
+[package]
+name = "secmem"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Audited zeroizing secret containers with best-effort memory locking (the sole unsafe-bearing crate)."
+
+[dependencies]
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+subtle = { workspace = true }
+getrandom = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_System_Memory"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[features]
+# The deterministic RNG is compile-time gated (REQ-SECMEM-005); never reachable from
+# a production build. Enabled automatically under `cfg(test)`; downstream test crates
+# opt in with this feature.
+test-deterministic = []
+
+[lints]
+workspace = true
