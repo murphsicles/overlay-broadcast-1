@@ -13,5 +13,8 @@ k256 = { workspace = true }
 hmac = { workspace = true }
 sha2 = { workspace = true }
 
+[dev-dependencies]
+bsv = { path = "../bsv" }
+
 [lints]
 workspace = true
