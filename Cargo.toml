@@ -3,7 +3,7 @@
 # depend on upper crates (enforced by review + cargo metadata cycle analysis).
 [workspace]
 resolver = "2"
-members = ["xtask", "crates/secmem"]
+members = ["xtask", "crates/secmem", "crates/bsv"]
 
 [workspace.package]
 edition = "2021"
@@ -19,7 +19,7 @@ zeroize = { version = "1.8", features = ["zeroize_derive"] }
 subtle = "2.6"
 rand_core = "0.6"
 sha2 = "0.10"
-ripemd = "0.10"
+ripemd = "0.1"
 hmac = "0.12"
 hkdf = "0.12"
 k256 = { version = "0.13", default-features = false, features = ["ecdsa", "arithmetic", "std"] }
