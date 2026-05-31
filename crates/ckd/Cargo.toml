@@ -1,0 +1,17 @@
+[package]
+name = "ckd"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Child key derivation (BIP32-style HMAC-SHA512 over secp256k1) for the EP key sets, plus the pinned secp256k1 signature wrapper verified for low-S and RFC-6979."
+
+[dependencies]
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+secmem = { path = "../secmem" }
+k256 = { workspace = true }
+hmac = { workspace = true }
+sha2 = { workspace = true }
+
+[lints]
+workspace = true
