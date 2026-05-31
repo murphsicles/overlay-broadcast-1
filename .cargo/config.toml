@@ -1,0 +1,12 @@
+# Cargo configuration.
+#
+# check-revoke = false: this build environment cannot reach the CA's CRL/OCSP
+# revocation endpoints, so schannel fails the TLS handshake to crates.io with
+# CRYPT_E_NO_REVOCATION_CHECK. Disabling the online revocation check lets cargo
+# fetch the (still certificate-validated) registry. Recorded and justified in
+# docs/ARCHITECTURE.md (REQ-UNI-006 provenance / REQ-GOV-001 reproducible build).
+[http]
+check-revoke = false
+
+[net]
+git-fetch-with-cli = true

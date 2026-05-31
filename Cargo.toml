@@ -1,0 +1,71 @@
+# Workspace manifest (REQ-GOV-002, REQ-UNI-010). Virtual manifest; members are the
+# crates of Section 2, added in the Section 23 build order. Lower crates never
+# depend on upper crates (enforced by review + cargo metadata cycle analysis).
+[workspace]
+resolver = "2"
+members = ["xtask"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+rust-version = "1.96.0"
+repository = "https://github.com/prof-faustus/overlay-broadcast"
+
+# Shared dependency versions (pinned), referenced by member crates via `workspace = true`.
+[workspace.dependencies]
+thiserror = "2.0"
+zeroize = { version = "1.8", features = ["zeroize_derive"] }
+subtle = "2.6"
+rand_core = "0.6"
+sha2 = "0.10"
+ripemd = "0.10"
+hmac = "0.12"
+hkdf = "0.12"
+k256 = { version = "0.13", default-features = false, features = ["ecdsa", "arithmetic", "std"] }
+aes-gcm = "0.10"
+proptest = "1.6"
+
+# REQ-GOV-031 / REQ-GOV-011: maximum lint strictness, denied workspace-wide. Each
+# crate opts in with `[lints] workspace = true`. `forbid(unsafe_code)` is applied as
+# a crate-root attribute (not here) so the audited `secmem` crate can use `deny`
+# with justified exceptions (REQ-GOV-010).
+# All lints are `deny` (never `warn`), because CI runs clippy with `-D warnings`
+# (REQ-GOV-031): a `warn` would escalate to a hard error anyway, so warn-level noise
+# is excluded and only the deliberately-enforced lints are set.
+[workspace.lints.rust]
+unused = "deny"
+future_incompatible = "deny"
+rust_2021_compatibility = "deny"
+
+[workspace.lints.clippy]
+# Power-of-Ten (REQ-GOV-011): no panicking constructs in non-test code.
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+unreachable = "deny"
+todo = "deny"
+unimplemented = "deny"
+panic_in_result_fn = "deny"
+# No out-of-bounds panics on untrusted input (REQ-GOV-011).
+indexing_slicing = "deny"
+# No implicit/truncating/sign-losing casts on security-relevant values (REQ-GOV-011).
+# Integer overflow itself is caught at runtime by overflow-checks=true in every
+# profile (the mechanism REQ-GOV-011 names).
+as_conversions = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_sign_loss = "deny"
+
+# Overflow checks ON in every profile (REQ-GOV-011: no integer overflow in release).
+[profile.dev]
+overflow-checks = true
+
+[profile.release]
+overflow-checks = true
+debug-assertions = false
+lto = "thin"
+codegen-units = 1
+
+[profile.test]
+overflow-checks = true

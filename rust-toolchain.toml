@@ -1,0 +1,7 @@
+# Pinned toolchain (REQ-GOV-001): exact version + the components the gate needs.
+# rustfmt/clippy for the lint+format gate; llvm-tools-preview for coverage
+# (REQ-TST-010 / cargo-llvm-cov).
+[toolchain]
+channel = "1.96.0"
+components = ["rustfmt", "clippy", "llvm-tools-preview"]
+profile = "minimal"

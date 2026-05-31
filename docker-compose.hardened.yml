@@ -1,0 +1,22 @@
+# Hardened test profile (REQ-CON-010..013): non-root, read-only rootfs, dropped
+# capabilities, no new privileges, bounded resources. Service wiring is completed as
+# the api/cli crates land.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: overlay-broadcast:hardened
+    read_only: true
+    user: "65532:65532"
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 512m
+    tmpfs:
+      - /tmp:size=16m
+    networks: [app]
+networks:
+  app:
+    driver: bridge

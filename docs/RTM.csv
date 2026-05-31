@@ -1,0 +1,16 @@
+req_id,area,verification,test_ids
+REQ-GOV-001,GOV,I,artifact-rust-toolchain.toml
+REQ-GOV-002,GOV,A,cargo-metadata-cycle-analysis
+REQ-GOV-011,GOV,T,gate-clippy-restriction-lints
+REQ-GOV-015,GOV,T,TST-GOV-015
+REQ-GOV-031,GOV,T,gate-fmt-clippy-build-test
+REQ-GOV-032,GOV,I,artifact-ci-workflow
+REQ-GOV-050,GOV,T,TST-GOV-050
+REQ-GOV-060,GOV,T,TST-GOV-060
+REQ-GOV-061,GOV,T,TST-GOV-060
+REQ-GOV-070,GOV,I,artifact-legacy-dir
+REQ-GOV-071,GOV,T,TST-GOV-071
+REQ-UNI-001,UNI,I,artifact-architecture-md
+REQ-UNI-003,UNI,T,TST-GOV-071
+REQ-UNI-005,UNI,T,TST-GOV-071
+REQ-UNI-010,UNI,I,cargo-metadata-members

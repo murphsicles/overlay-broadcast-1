@@ -1,0 +1,13 @@
+[package]
+name = "xtask"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+# std-only by design: the project gate runner must build even if the registry is
+# briefly unreachable, and it must have no supply-chain surface of its own.
+[dependencies]
+
+[lints]
+workspace = true

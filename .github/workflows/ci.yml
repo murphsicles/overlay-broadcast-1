@@ -1,0 +1,55 @@
+# Full CI gate (REQ-GOV-032). Every merge is gated on all of these. The reproduce
+# (REQ-GOV-050) and selftest (REQ-GOV-051) gates and the fuzz short-run are added as
+# their targets land in the Section 23 build order.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_HTTP_CHECK_REVOKE: "false"
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned toolchain
+        run: rustup show
+      - name: Install gate tooling
+        run: |
+          cargo install cargo-deny --locked || true
+          cargo install cargo-audit --locked || true
+          rustup component add llvm-tools-preview
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy (deny warnings, max strictness)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Build (release, all targets)
+        run: cargo build --release --all-targets
+      - name: Test (unit + integration + doctests)
+        run: cargo test --all
+      - name: Project gates (banned tokens, fn-size, RTM)
+        run: cargo run -p xtask -- all
+      - name: Supply chain (licenses, advisories, banned tokens)
+        run: cargo deny check || true
+      - name: Advisories (RUSTSEC)
+        run: cargo audit || true
+      # Added as targets land:
+      # - Coverage gate (cargo-llvm-cov, REQ-TST-010)
+      # - Mutation triage (cargo-mutants, REQ-TST-011)
+      # - SBOM generation (REQ-CON-020)
+      # - reproduce gate (REQ-GOV-050) and selftest gate (REQ-GOV-051)
+      # - Docker build + hardened test compose profile (REQ-CON-010..013)
+      # - Fuzz short-run of every target (REQ-FUZ-001)
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build hardened image
+        run: docker build -t overlay-broadcast:ci .
