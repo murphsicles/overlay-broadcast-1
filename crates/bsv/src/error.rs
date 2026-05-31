@@ -33,4 +33,14 @@ pub enum BsvError {
     /// A numeric value exceeded its valid range / a bound was exceeded.
     #[error("value out of range")]
     OutOfRange,
+    /// A transaction was malformed.
+    #[error("malformed transaction")]
+    MalformedTx,
+    /// A script was malformed.
+    #[error("malformed script")]
+    MalformedScript,
+    /// SIGHASH_SINGLE was requested for an input with no corresponding output
+    /// (the classic SIGHASH_SINGLE bug); refused (REQ-BSV-031).
+    #[error("SIGHASH_SINGLE input index has no corresponding output")]
+    SighashSingleIndex,
 }
