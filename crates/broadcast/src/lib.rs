@@ -8,9 +8,11 @@
 
 mod error;
 mod graph;
+mod rekey;
 
 pub use error::BcsError;
 pub use graph::{BroadcastGraph, EncryptedDataItem, UserId};
+pub use rekey::{Communique, EncryptionRef, RekeyMessage, RekeyResult, Strategy};
 
 #[cfg(test)]
 #[allow(
@@ -72,5 +74,108 @@ mod tests {
         assert!(BroadcastGraph::build(&[1, 2, 3]).is_err());
         assert!(BroadcastGraph::build(&[]).is_err());
         assert!(BroadcastGraph::build(&[1, 2, 3, 4, 5, 6, 7, 8]).is_ok());
+    }
+
+    // TST-BCS-013 (leave): leaving rotates the path to the root; a fresh session is
+    // decryptable by remaining members and the departed member is excluded.
+    #[test]
+    fn tst_bcs_013_leave_rekeys() {
+        let mut graph = BroadcastGraph::build(&[1, 2, 3, 4]).unwrap();
+        let result = graph.leave(2).unwrap();
+        // the root (message key) was rotated, so a removed member's old key is stale.
+        assert!(result.replaced.contains(&graph.root()));
+        let items = graph.encrypted_data_items().unwrap();
+        let sealed = graph.encrypt_message(b"post-leave").unwrap();
+        for user in [1u64, 3, 4] {
+            let leaf_key = graph.user_leaf_key(user).unwrap();
+            assert_eq!(
+                graph
+                    .user_decrypt(user, &leaf_key, &items, &sealed)
+                    .unwrap()
+                    .expose(),
+                b"post-leave"
+            );
+        }
+        assert!(
+            graph.user_leaf_key(2).is_none(),
+            "the departed member is gone"
+        );
+    }
+
+    // TST-BCS-013 (join): joining adds a leaf, rotates the new path, and the new member
+    // reads new sessions but not the pre-join message.
+    #[test]
+    fn tst_bcs_013_join_rekeys() {
+        let mut graph = BroadcastGraph::build(&[1, 2, 3, 4]).unwrap();
+        let old_items = graph.encrypted_data_items().unwrap();
+        let old_sealed = graph.encrypt_message(b"pre-join").unwrap();
+
+        let sponsor = *graph.children(graph.root()).first().unwrap();
+        let (result, leaf5_key) = graph.join(5, sponsor).unwrap();
+        assert!(result.replaced.contains(&graph.root()));
+
+        let items = graph.encrypted_data_items().unwrap();
+        let sealed = graph.encrypt_message(b"post-join").unwrap();
+        assert_eq!(
+            graph
+                .user_decrypt(5, &leaf5_key, &items, &sealed)
+                .unwrap()
+                .expose(),
+            b"post-join"
+        );
+        let leaf1 = graph.user_leaf_key(1).unwrap();
+        assert_eq!(
+            graph
+                .user_decrypt(1, &leaf1, &items, &sealed)
+                .unwrap()
+                .expose(),
+            b"post-join"
+        );
+        // the new member cannot read the pre-join message.
+        assert!(graph
+            .user_decrypt(5, &leaf5_key, &old_items, &old_sealed)
+            .is_err());
+    }
+
+    // TST-BCS-010/011/012: the three rekeying strategies package the same key changes
+    // with their characteristic invariants; a remaining member derives the new root
+    // key from its user-oriented communique.
+    #[test]
+    fn tst_bcs_010_011_012_strategies() {
+        use secmem::SecretBytes;
+        let mut graph = BroadcastGraph::build(&[1, 2, 3, 4, 5, 6, 7, 8]).unwrap();
+        let result = graph.leave(3).unwrap();
+
+        let key_oriented = graph.communiques(&result, Strategy::KeyOriented).unwrap();
+        let group_oriented = graph.communiques(&result, Strategy::GroupOriented).unwrap();
+        let user_oriented = graph.communiques(&result, Strategy::UserOriented).unwrap();
+
+        // key-oriented (§4.2): exactly one key per communique.
+        assert!(key_oriented.iter().all(|c| c.keys.len() == 1));
+        assert_eq!(key_oriented.len(), result.messages.len());
+        // group-oriented (§4.3): minimised communique count.
+        assert!(group_oriented.len() <= key_oriented.len());
+        // user-oriented (§4.1): one communique per affected user, addressed to its leaf.
+        assert!(user_oriented
+            .iter()
+            .all(|c| matches!(c.encrypted_under, EncryptionRef::UserLeaf(_))));
+
+        // a remaining member derives the new root (message) key from its communique.
+        let comm = user_oriented
+            .iter()
+            .find(|c| c.encrypted_under == EncryptionRef::UserLeaf(1u64))
+            .unwrap();
+        let leaf1 = graph.user_leaf_key(1).unwrap();
+        let new_keys = BroadcastGraph::open_user_communique(comm, &leaf1).unwrap();
+        let root_key = new_keys
+            .iter()
+            .find(|(node, _)| *node == graph.root())
+            .map(|(_, key)| SecretBytes::from_slice(key.expose()))
+            .unwrap();
+        let sealed = graph.encrypt_message(b"new session").unwrap();
+        assert_eq!(
+            graph.decrypt_with_key(&root_key, &sealed).unwrap().expose(),
+            b"new session"
+        );
     }
 }
