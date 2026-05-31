@@ -15,6 +15,7 @@ mod hash;
 mod header;
 mod headerchain;
 mod merkle;
+mod nodeclient;
 mod script;
 mod sighash;
 mod transaction;
@@ -28,6 +29,9 @@ pub use header::{BlockHeader, HEADER_LEN};
 pub use headerchain::HeaderChain;
 pub use merkle::{
     compute_root_from_proof, hash_pair, merkle_root, verify_against_chain, MerkleProof,
+};
+pub use nodeclient::{
+    MerkleBranch, NodeClient, NodeError, OfflineNodeClient, TeranodeClient, Transport,
 };
 pub use script::{bare_multisig_1_of_2, op, p2pkh, parse_script, push_data, ScriptOp};
 pub use sighash::{
