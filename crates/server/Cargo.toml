@@ -1,0 +1,27 @@
+[package]
+name = "server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The served HTTP api: a minimal blocking server wiring the ApiService boundary (auth/replay/rate-limit/audit) to the overlay/broadcast/session/custody operations, the obs metrics + health/readiness endpoints, and the live node-submission client."
+
+[[bin]]
+name = "overlay-broadcast-server"
+path = "src/main.rs"
+
+[lib]
+name = "server"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror = { workspace = true }
+api = { path = "../api" }
+obs = { path = "../obs" }
+node = { path = "../node" }
+bsv = { path = "../bsv" }
+custody = { path = "../custody" }
+tiny_http = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

@@ -4,6 +4,22 @@ Semantic versioning (REQ-GOV-080). Keep-a-changelog format.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06
+
+### Added
+- **Live node-submission client** (`node` crate): a blocking Teranode JSON-RPC client —
+  `best_block_hash`, `block_header`, `submit_transaction`, and a readiness probe; node
+  responses are validated against the `bsv::HeaderChain` trust root by the caller. Verified
+  against a live Teranode v0.15.1 node (our recomputed block hash matches the node's).
+- **Served HTTP api** (`server` crate + `overlay-broadcast-server` binary): a minimal
+  blocking (`tiny_http`) server wiring the `ApiService` boundary (auth/replay/rate-limit/
+  audit/termination) to the operation backend, the obs metrics, and `/health` + `/readiness`
+  + `/metrics` + `POST /v1/operation`. Proven running **inside the hardened distroless
+  container** (`--read-only --cap-drop ALL --no-new-privileges`) with `/readiness`
+  live-probing the real Teranode node; unsigned requests are rejected (401) by the boundary.
+- Dockerfile now builds the server binary too; `docker-compose.hardened.yml` `api` service
+  runs the server on `:8080` with node-RPC env wiring.
+
 ## [0.2.1] - 2026-06
 
 ### Verified

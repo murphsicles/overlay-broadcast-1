@@ -6,14 +6,21 @@ FROM rust:1.96.0-slim AS build
 ENV CARGO_HTTP_CHECK_REVOKE=false
 WORKDIR /src
 COPY . .
-RUN cargo build --release --bin overlay-broadcast
+# The CLI (selftest/reproduce/operations) and the served HTTP api server.
+RUN cargo build --release --bin overlay-broadcast --bin overlay-broadcast-server
 
 # Minimal, non-root runtime. `:nonroot` runs as UID 65532 with no shell.
 FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
 WORKDIR /app
 COPY --from=build /src/target/release/overlay-broadcast /app/overlay-broadcast
+COPY --from=build /src/target/release/overlay-broadcast-server /app/overlay-broadcast-server
 USER nonroot:nonroot
-# Liveness via the CLI selftest (the api /health endpoint is wired in compose).
+EXPOSE 8080
+# Liveness via the CLI selftest (the served /health + /readiness endpoints are the api's
+# own liveness/readiness once the server is the entrypoint).
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["/app/overlay-broadcast", "selftest"]
+# Default to the CLI; deployments override the entrypoint to run the server, e.g.
+# `docker run ... overlay-broadcast:enterprise` -> selftest, or set the server entrypoint
+# in compose/k8s (see docker-compose.hardened.yml).
 ENTRYPOINT ["/app/overlay-broadcast"]
 CMD ["selftest"]

@@ -4,12 +4,14 @@
 # env-driven and commented for live runs. The `test` profile runs the full suite +
 # reproduce + selftest in-container.
 services:
+  # The served HTTP api (overlay-broadcast-server): /health, /readiness, /metrics, and
+  # POST /v1/operation, wired to the BSV node for readiness + submission.
   api:
     build:
       context: .
       dockerfile: Dockerfile
     image: overlay-broadcast:hardened
-    command: ["selftest"]
+    entrypoint: ["/app/overlay-broadcast-server"]
     read_only: true
     user: "65532:65532"
     cap_drop: ["ALL"]
@@ -19,12 +21,20 @@ services:
     mem_limit: 512m
     tmpfs:
       - /tmp:size=16m
+    ports:
+      - "8080:8080"
     # Secrets injected at runtime only (never baked into the image).
     environment:
       - RUST_LOG=info
+      - BIND=0.0.0.0:8080
+      # Point at a BSV node for live readiness + submission (e.g. a Teranode RPC):
+      # - NODE_RPC_URL=${NODE_RPC_URL:-}
+      # - NODE_RPC_USER=${NODE_RPC_USER:-}
+      # - NODE_RPC_PASS=${NODE_RPC_PASS:-}
       # - OPERATOR_PASSPHRASE_FILE=/run/secrets/operator_passphrase
-      # - TERANODE_ENDPOINT=${TERANODE_ENDPOINT:-}
     healthcheck:
+      # binary-level liveness (distroless has no curl); /health + /readiness are the
+      # served HTTP probes for an external load balancer.
       test: ["CMD", "/app/overlay-broadcast", "selftest"]
       interval: 30s
       timeout: 5s

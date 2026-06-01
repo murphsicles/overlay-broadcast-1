@@ -1,0 +1,16 @@
+[package]
+name = "node"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Live BSV node-submission client (Teranode JSON-RPC): best-block / header queries, raw-transaction submission, and a readiness probe — all validated against the header-chain trust root by the caller."
+
+[dependencies]
+thiserror = { workspace = true }
+bsv = { path = "../bsv" }
+obs = { path = "../obs" }
+ureq = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

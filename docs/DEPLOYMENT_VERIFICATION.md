@@ -45,3 +45,20 @@ TERANODE_HEADER_HEX=<getblockheader hex>  TERANODE_BLOCK_HASH=<getbestblockhash>
 This closes the external genuine-data acceptance with a real node, complementing the
 in-process independent-path conformance (`tst_tst_012_ep_overlay_transaction`,
 `tst_tst_012_gb_session_transaction`, `tst_tst_012_signature_validates_independently`).
+
+## Served HTTP api in the hardened container, wired to the live node (v0.3.0)
+
+The `overlay-broadcast-server` binary was built into the distroless image and run with
+`--read-only --cap-drop ALL --security-opt no-new-privileges --network host`, pointed at the
+live Teranode RPC. Verified over HTTP from the host:
+
+| Endpoint | Result |
+| --- | --- |
+| `GET /health` | `200 {"status":"alive"}` |
+| `GET /readiness` | `200 {"status":"ready"}` — the **containerized** server live-probed the real Teranode node |
+| `GET /metrics` | Prometheus exposition served (`ob_*` series) |
+| `POST /v1/operation` (unsigned) | `401 {"error":"unauthorized"}` — the ApiService auth boundary is live end to end |
+
+The node client is validated against the live node by `node::tests::
+tst_node_live_header_validates` (run with `NODE_RPC_URL`/`NODE_RPC_USER`/`NODE_RPC_PASS`):
+our `BlockHeader::parse` + double-SHA-256 reproduce the node's reported best-block hash.
