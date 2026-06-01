@@ -1,0 +1,55 @@
+# cargo-fuzz / libFuzzer harnesses (REQ-FUZ-001..005). This is a SEPARATE workspace (it
+# needs a nightly toolchain + LLVM libFuzzer, not present in the stable CI image); run with
+# `cargo +nightly fuzz run <target>`. The stable, always-run robustness fuzzer that gates
+# every CI build lives in `crates/fuzzprop` (REQ-FUZ-006).
+[package]
+name = "overlay-broadcast-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+bsv = { path = "../crates/bsv" }
+api = { path = "../crates/api" }
+
+[[bin]]
+name = "tx_parser"
+path = "fuzz_targets/tx_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "script_parser"
+path = "fuzz_targets/script_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "header_parser"
+path = "fuzz_targets/header_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "api_request"
+path = "fuzz_targets/api_request.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rekey_payload"
+path = "fuzz_targets/rekey_payload.rs"
+test = false
+doc = false
+bench = false
+
+# Detach from the parent workspace (cargo-fuzz convention).
+[workspace]

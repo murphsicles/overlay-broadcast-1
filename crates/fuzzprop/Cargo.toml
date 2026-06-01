@@ -1,0 +1,13 @@
+[package]
+name = "fuzzprop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Runnable robustness fuzzing (stable Rust): drives every untrusted-input parser with many adversarial inputs, asserting no panic/hang and only typed errors (REQ-FUZ-006). The libFuzzer targets live under ../../fuzz and run under nightly cargo-fuzz."
+
+[dependencies]
+bsv = { path = "../bsv" }
+api = { path = "../api" }
+
+[lints]
+workspace = true
