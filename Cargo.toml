@@ -3,7 +3,7 @@
 # depend on upper crates (enforced by review + cargo metadata cycle analysis).
 [workspace]
 resolver = "2"
-members = ["xtask", "crates/secmem", "crates/bsv", "crates/ckd", "crates/cipher", "crates/keygraph", "crates/overlay", "crates/broadcast", "crates/session", "crates/custody"]
+members = ["xtask", "crates/secmem", "crates/bsv", "crates/ckd", "crates/cipher", "crates/keygraph", "crates/overlay", "crates/broadcast", "crates/session", "crates/custody", "crates/kst"]
 
 [workspace.package]
 edition = "2021"
@@ -33,6 +33,8 @@ proptest = "1.6"
 num-bigint-dig = { version = "0.8", features = ["prime", "rand"] }
 num-integer = "0.1"
 rand = "0.8"
+# KeyStore (REQ-KST-012): memory-hard passphrase KDF for the encrypted-file KEK.
+argon2 = "0.5"
 
 # REQ-GOV-031 / REQ-GOV-011: maximum lint strictness, denied workspace-wide. Each
 # crate opts in with `[lints] workspace = true`. `forbid(unsafe_code)` is applied as

@@ -1,0 +1,18 @@
+[package]
+name = "kst"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "KeyStore: a backend-abstracting trait for where seeds and long-term keys live, with a tested encrypted-file backend (AEAD under an Argon2 KEK), k-of-n Shamir seed backup, and HSM/KMS backends (integration-tested only with the hardware/service)."
+
+[dependencies]
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+secmem = { path = "../secmem" }
+cipher = { path = "../cipher" }
+ckd = { path = "../ckd" }
+k256 = { workspace = true }
+argon2 = { workspace = true }
+
+[lints]
+workspace = true
