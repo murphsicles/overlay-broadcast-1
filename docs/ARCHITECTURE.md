@@ -26,7 +26,7 @@ next (REQ-BLD-001).
 | concern | pin | rationale |
 | --- | --- | --- |
 | toolchain | Rust 1.96.0, components rustfmt/clippy/llvm-tools-preview | reproducible build (REQ-GOV-001) |
-| secp256k1 | `k256` (RustCrypto), `default-features = false`, features `ecdsa`+`arithmetic`+`std` | pure-Rust (no C toolchain), NCC-audited; provides low-S normalization and RFC-6979 deterministic signing, both **proven by test** (REQ-BSV-032, REQ-CKD-010) rather than assumed |
+| secp256k1 | `k256` (RustCrypto), `default-features = false`, features `ecdsa`+`arithmetic`+`std` | pure-Rust (no C toolchain), NCC-audited; provides low-S normalization and RFC-6979 deterministic signing, both **proven by test** (REQ-BSV-032, REQ-CKD-010) rather than assumed; `Scalar` implements `Zeroize` (via the non-optional `elliptic-curve` zeroize dep), so reconstruction-mode custody wipes the transiently-recovered key (REQ-CUS-004) |
 | hashing | `sha2`, `ripemd`, `hmac`, `hkdf` (RustCrypto) | KAT-verified; double-SHA-256, hash160, HMAC-SHA512 (CKD), HKDF-SHA256 (ECIES) |
 | AEAD | `aes-gcm` (RustCrypto) | AES-256-GCM with enforced nonce-uniqueness invariant (REQ-CIPH-010) |
 | secret hygiene | `zeroize`, `subtle` | zeroize-on-drop, constant-time equality (Section 3) |
@@ -57,6 +57,13 @@ is required, while FROST provides true-threshold authority signatures off the in
 path. The alternative — GG20 threshold ECDSA (Gennaro–Goldfeder, 2020) — yields
 on-chain-valid ECDSA but has a thinner audited-Rust surface. This fork is flagged
 for explicit ratification when custody is built.
+
+**Ratified at step 10 (2026-05):** built as pinned — FROST true-threshold Schnorr
+(committed nonces, Lagrange on partial signatures; key never reconstructed) for
+authority signatures, plus Shamir-reconstruction mode for the single on-chain ECDSA
+signature path (transient reconstruction, key wiped via `Scalar`/byte zeroize). GG20
+remains the documented upgrade if a future requirement needs true-threshold *ECDSA*
+on the input path; revisit when an audited GG20 Rust crate is available.
 
 ### KeyStore backends (REQ-KST-010/011)
 

@@ -201,6 +201,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "custody"
+version = "0.1.0"
+dependencies = [
+ "bsv",
+ "ckd",
+ "k256",
+ "secmem",
+ "sha2",
+ "thiserror",
+ "zeroize",
+]
+
+[[package]]
 name = "der"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -791,6 +804,15 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
+]
+
+[[package]]
+name = "session"
+version = "0.1.0"
+dependencies = [
+ "bsv",
+ "ckd",
+ "thiserror",
 ]
 
 [[package]]

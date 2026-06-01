@@ -1,0 +1,18 @@
+[package]
+name = "custody"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Threshold signing (FROST-style Schnorr; key never reconstructed) and a Shamir-reconstruction fallback, with an anchorable rotation/revocation lifecycle."
+
+[dependencies]
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+secmem = { path = "../secmem" }
+bsv = { path = "../bsv" }
+ckd = { path = "../ckd" }
+k256 = { workspace = true }
+sha2 = { workspace = true }
+
+[lints]
+workspace = true
