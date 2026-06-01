@@ -1,0 +1,14 @@
+[package]
+name = "session"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GB 2623780 B transaction lifecycle: session transactions, SIGHASH discipline (member SIGHASH_SINGLE, broadcaster-last SIGHASH_ALL), off-chain and on-block subscription, revocation."
+
+[dependencies]
+thiserror = { workspace = true }
+bsv = { path = "../bsv" }
+ckd = { path = "../ckd" }
+
+[lints]
+workspace = true
