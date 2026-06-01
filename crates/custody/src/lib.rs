@@ -15,9 +15,10 @@
 //! MtA in [`gg20::sign`]: the initiator range proof and the responder consistency proof Π′
 //! ([`rangeproof`]) and the Paillier-modulus well-formedness proof ([`modulusproof`]).
 //! [`gg20::sign_identifiable`] gives **identifiable abort** — a bad proof is attributed to
-//! the exact party ([`gg20::AbortError`]) and equivocation is localized by the
-//! echo-broadcast round ([`echo`]). The last refinement is type-7 final-signature
-//! attribution — see `docs/ARCHITECTURE.md`.
+//! the exact party ([`gg20::AbortError`]), equivocation is localized by the echo-broadcast
+//! round ([`echo`]), and a dishonest final share is pinpointed by the type-7 check
+//! ([`type7`]). The full GG20 malicious-security + identifiable-abort surface is in place;
+//! see `docs/ARCHITECTURE.md`.
 #![forbid(unsafe_code)]
 
 pub mod echo;
@@ -30,6 +31,7 @@ pub mod rangeproof;
 pub mod reconstruction;
 pub mod shamir;
 pub mod threshold;
+pub mod type7;
 
 pub use error::CustodyError;
 pub use lifecycle::{verify_lifecycle, EventKind, KeyCustodian, LifecycleEvent};
@@ -335,6 +337,37 @@ mod tests {
                 fault: FaultKind::ModulusProof
             })),
             "the cheating party is identified"
+        );
+    }
+
+    // TST-CUS-004 (type-7 identifiable abort): when a proof-valid run yields an invalid
+    // final signature, the per-party check s_i·G == m·K_i + r·Σ_i pinpoints the party that
+    // broadcast a final share inconsistent with its committed k_i and σ_i shares.
+    #[test]
+    fn tst_cus_004h_type7_attributes_bad_final_share() {
+        use crate::shamir::random_scalar;
+        use crate::type7::{verify_final_shares, ShareEvidence, Type7Outcome};
+        use k256::Scalar;
+
+        let m = random_scalar().unwrap();
+        let r = random_scalar().unwrap();
+        let mut evidence: Vec<ShareEvidence> = (0..3)
+            .map(|_| {
+                ShareEvidence::from_shares(random_scalar().unwrap(), random_scalar().unwrap(), m, r)
+            })
+            .collect();
+        assert_eq!(
+            verify_final_shares(&evidence, m, r),
+            Type7Outcome::Consistent,
+            "honest final shares are consistent"
+        );
+
+        // party 1 broadcasts a final share inconsistent with its committed shares
+        evidence[1].s_share += Scalar::ONE;
+        assert_eq!(
+            verify_final_shares(&evidence, m, r),
+            Type7Outcome::Faulty(1),
+            "the bad final share is attributed to party 1"
         );
     }
 

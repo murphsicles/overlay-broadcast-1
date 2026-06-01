@@ -15,11 +15,11 @@
 //! GG18/20 ZK proofs — the initiator range proof and the responder consistency proof Π′
 //! ([`crate::rangeproof`]) and each party's Paillier-modulus proof ([`crate::modulusproof`])
 //! — and [`sign_identifiable`] provides **identifiable abort**: a bad modulus, range, or
-//! responder proof is attributed to the exact offending party ([`AbortError`]), and
-//! equivocation across the broadcast is caught and localized by
-//! [`crate::echo::run_echo_round`]. The remaining refinement is *type-7* attribution — if a
-//! fully-proof-valid run still yields an invalid final signature, pinpointing the bad `s_i`
-//! needs a per-party `s_i`-consistency proof; that is the last item. Production Paillier
+//! responder proof is attributed to the exact offending party ([`AbortError`]), equivocation
+//! across the broadcast is caught and localized by [`crate::echo::run_echo_round`], and a
+//! dishonest *final share* (a proof-valid run that still yields an invalid signature) is
+//! pinpointed by the type-7 check [`crate::type7::verify_final_shares`]. The full GG20
+//! malicious-security + identifiable-abort surface is therefore in place. Production Paillier
 //! modulus must be ≥ 2048 bits; the correctness bound alone needs `n > q²`.
 //! See `docs/ARCHITECTURE.md`.
 use crate::error::CustodyError;

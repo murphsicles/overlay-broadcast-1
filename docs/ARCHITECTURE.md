@@ -87,11 +87,14 @@ signing modes are built:
      party sending different round-one messages to different receivers) is caught and
      localized by the **echo-broadcast round** (`custody::echo::run_echo_round`,
      Goldwasser–Lindell) — each receiver echoes a transcript hash and the disagreeing sender
-     is pinned (`tst_cus_004f`, `tst_cus_004g`). **Residual — type-7:** if a fully
-     proof-valid run still produced an invalid final signature, attributing the bad `s_i`
-     needs a per-party `s_i`-consistency proof; that is the only remaining GG20 item. Paillier
-     modulus **≥ 2048 bits in production** (the `n > q²` correctness bound alone needs ~512);
-     tests use 1024, and the modulus proof uses 12 challenges for test speed (production ≥ 80).
+     is pinned (`tst_cus_004f`, `tst_cus_004g`). **Type-7 — IMPLEMENTED:** a dishonest final
+     share (a proof-valid run that still yields an invalid signature) is pinpointed by
+     `custody::type7::verify_final_shares`, checking `s_i·G == m·K_i + r·Σ_i` against each
+     party's published `k_i·G` / `σ_i·G` commitments and naming the inconsistent party
+     (`tst_cus_004h`). The full GG20 malicious-security + identifiable-abort surface is now in
+     place. Paillier modulus **≥ 2048 bits in production** (the `n > q²` correctness bound
+     alone needs ~512); tests use 1024, and the modulus proof uses 12 challenges for test
+     speed (production ≥ 80).
 2. **FROST true-threshold Schnorr** (Komlo–Goldberg 2020) — committed nonces, Lagrange on
    partial signatures, key never reconstructed; for authority signatures off the on-chain
    input path (REQ-CUS-001/003).
