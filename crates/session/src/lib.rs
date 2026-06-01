@@ -9,13 +9,15 @@
 //! and on-block subscription, renewal, and revocation are modelled.
 
 mod builder;
+mod channel;
 mod error;
 mod subscription;
 
 pub use builder::{
-    build_session, sign_broadcaster, sign_member, verify_broadcaster, verify_member, MemberSpec,
-    SessionParams, SessionTx,
+    build_session, ready_to_release, sign_broadcaster, sign_member, verify_broadcaster,
+    verify_member, MemberSpec, SessionParams, SessionTx,
 };
+pub use channel::{Envelope, SecureChannel};
 pub use error::SesError;
 pub use subscription::{SubSession, Subscription, SubscriptionMode};
 
@@ -153,5 +155,153 @@ mod tests {
         let sub_session = SubSession::new("deadbeef".repeat(8), 0);
         assert_eq!(sub_session.index, 0);
         assert_eq!(sub_session.parent_txid.len(), 64);
+    }
+
+    // TST-SES-011 (REQ-SES-011): on-block funded subscription — the funding must meet the
+    // cost (else it funds zero sessions), and the member input/output pair is SIGHASH_SINGLE
+    // signed and verifies.
+    #[test]
+    fn tst_ses_011_on_block_funding_and_pair_signing() {
+        // funding >= cost funds sessions; funding < cost funds none (tx would be rejected)
+        let funded = Subscription::new(SubscriptionMode::OnBlock, 10_000, 1_000).unwrap();
+        assert_eq!(funded.sessions_funded(), 10, "funding meets cost");
+        let underfunded = Subscription::new(SubscriptionMode::OnBlock, 500, 1_000).unwrap();
+        assert_eq!(
+            underfunded.sessions_funded(),
+            0,
+            "funding below cost funds no session"
+        );
+
+        // the member-and-funding pair is SIGHASH_SINGLE signed over its output and verifies
+        let (members, params, m0_priv, _) = members_and_params(b"on-block");
+        let mut session = build_session(&members, &params).unwrap();
+        sign_member(
+            &mut session.transaction,
+            0,
+            &m0_priv,
+            &members[0].member_pubkey,
+            members[0].input_value,
+        )
+        .unwrap();
+        assert!(verify_member(
+            &session.transaction,
+            0,
+            &members[0].member_pubkey,
+            members[0].input_value
+        )
+        .unwrap());
+    }
+
+    // TST-SES-020 (REQ-SES-020): revocation — a member unrenewed past its funded sessions is
+    // revoked (timeout), and renewal restores eligibility for the renewed session.
+    #[test]
+    fn tst_ses_020_revocation() {
+        let mut sub = Subscription::new(SubscriptionMode::OffChain, 300, 100).unwrap();
+        assert_eq!(sub.sessions_funded(), 3);
+        assert!(
+            sub.is_revoked(5),
+            "unrenewed past funded window -> revoked (timeout)"
+        );
+        sub.renew().unwrap();
+        sub.renew().unwrap();
+        assert!(!sub.is_revoked(2), "renewed through session 2 -> eligible");
+        assert!(sub.is_revoked(3), "session 3 not renewed -> revoked");
+    }
+
+    // TST-SES-030 (REQ-SES-030): sub-session split — a session over many members is split so
+    // each sub-session transaction carries only its members, and only those members sign it.
+    #[test]
+    fn tst_ses_030_sub_session_split() {
+        let (members, params, m0_priv, _) = members_and_params(b"split");
+        // sub-session A carries member 0 only; sub-session B carries member 1 only.
+        let sub_a = build_session(&members[0..1], &params).unwrap();
+        let sub_b = build_session(&members[1..2], &params).unwrap();
+        assert_eq!(sub_a.member_count, 1);
+        assert_eq!(sub_b.member_count, 1);
+
+        // only the relevant member signs its sub-session (member 0 signs A and verifies)
+        let mut tx_a = sub_a.transaction.clone();
+        sign_member(
+            &mut tx_a,
+            0,
+            &m0_priv,
+            &members[0].member_pubkey,
+            members[0].input_value,
+        )
+        .unwrap();
+        assert!(
+            verify_member(&tx_a, 0, &members[0].member_pubkey, members[0].input_value).unwrap()
+        );
+        // member 0's key does not validate as member 1 on sub-session B
+        assert!(!verify_member(
+            &sub_b.transaction,
+            0,
+            &members[0].member_pubkey,
+            members[0].input_value
+        )
+        .unwrap_or(false));
+    }
+
+    // TST-SES-040 (REQ-SES-040): the broadcaster releases only after every (sub-)session
+    // transaction is uploaded; a re-encrypt changes the OP_RETURN and so the broadcaster's
+    // SIGHASH_ALL signature (the re-encrypt path).
+    #[test]
+    fn tst_ses_040_release_gated_on_upload() {
+        assert!(
+            !ready_to_release(&[true, false, true]),
+            "not all uploaded -> hold"
+        );
+        assert!(
+            ready_to_release(&[true, true, true]),
+            "all uploaded -> release"
+        );
+        assert!(!ready_to_release(&[]), "nothing to release");
+
+        // re-encrypt: a new rekeying payload yields a different broadcaster signature
+        let (members, params_a, _, b_priv) = members_and_params(b"key-A");
+        let mut params_b = params_a.clone();
+        params_b.rekeying_payload = b"key-B-reencrypted".to_vec();
+        let mut tx_a = build_session(&members, &params_a).unwrap();
+        let mut tx_b = build_session(&members, &params_b).unwrap();
+        let idx = tx_a.broadcaster_index();
+        sign_broadcaster(
+            &mut tx_a.transaction,
+            idx,
+            &b_priv,
+            &params_a.broadcaster_pubkey,
+            params_a.broadcaster_input_value,
+        )
+        .unwrap();
+        sign_broadcaster(
+            &mut tx_b.transaction,
+            idx,
+            &b_priv,
+            &params_b.broadcaster_pubkey,
+            params_b.broadcaster_input_value,
+        )
+        .unwrap();
+        assert_ne!(
+            tx_a.transaction.inputs[idx].unlocking_script,
+            tx_b.transaction.inputs[idx].unlocking_script,
+            "re-encrypt produces a distinct broadcaster signature"
+        );
+    }
+
+    // TST-SES-050 (REQ-SES-050): the secure channel binds a member's component to its
+    // session; a component lifted to a different session/transaction binding is rejected.
+    #[test]
+    fn tst_ses_050_secure_channel_prevents_lift() {
+        let component = b"member-signed-component";
+        let session_binding = b"session-broadcaster-output-A";
+        let envelope = SecureChannel::seal(component, session_binding);
+        assert_eq!(
+            SecureChannel::open(&envelope, session_binding).as_deref(),
+            Some(component.as_slice())
+        );
+        // an attacker lifts the component to a different (malicious non-session) binding
+        assert!(
+            SecureChannel::open(&envelope, b"malicious-other-transaction").is_none(),
+            "lifted component is rejected"
+        );
     }
 }

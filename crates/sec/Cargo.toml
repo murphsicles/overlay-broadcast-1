@@ -1,0 +1,23 @@
+[package]
+name = "sec"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Adversarial threat-model suite (Section 16, REQ-SEC): one test per threat that performs the attack and asserts the mitigation defeats it."
+
+[dev-dependencies]
+bsv = { path = "../bsv" }
+ckd = { path = "../ckd" }
+session = { path = "../session" }
+overlay = { path = "../overlay" }
+api = { path = "../api" }
+res = { path = "../res" }
+custody = { path = "../custody" }
+secmem = { path = "../secmem" }
+obs = { path = "../obs" }
+kst = { path = "../kst" }
+keygraph = { path = "../keygraph" }
+k256 = { workspace = true }
+
+[lints]
+workspace = true

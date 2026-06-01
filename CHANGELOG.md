@@ -4,13 +4,58 @@ Semantic versioning (REQ-GOV-080). Keep-a-changelog format.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06
+
 ### Added
-- Step 1 (REQ-BLD-001.1): Cargo workspace skeleton; pinned toolchain
-  (rust-toolchain.toml, Rust 1.96.0 + rustfmt/clippy/llvm-tools); workspace lint
-  policy enforcing the Power-of-Ten clippy set with `-D warnings` and
-  `overflow-checks = true` in every profile; `.cargo/config.toml`; the `xtask` gate
-  crate (banned-token gate REQ-UNI-005/GOV-071, function-size gate REQ-GOV-015, RTM
-  structural gate REQ-GOV-060/061) with unit tests; `deny.toml`; CI workflow
-  (REQ-GOV-032); hardened Dockerfile + compose skeleton (REQ-CON); docs skeleton
-  (ARCHITECTURE with pins, CODING_STANDARD, SECURITY); `docs/RTM.csv` skeleton;
-  `legacy/` preservation note (REQ-GOV-070).
+- Adversarial threat-model suite (`sec` crate, Section 16): one executable test per
+  threat (REQ-SEC-001..009, 031, 100) that mounts the attack and asserts the mitigation
+  defeats it — SIGHASH_SINGLE lift, the "1" hash bug, broadcaster equivocation, replay,
+  griefing, seed-isolation breach (negative), revoked re-spend, high-S malleability, api
+  auth replay/forgery, secret leakage, resource exhaustion.
+- Session lifecycle completion (REQ-SES-011/020/030/040/050): on-block funding +
+  pair-signing, revocation, sub-session split, upload-gated release + re-encrypt, and a
+  `SecureChannel` abstraction that binds a member's component to its session (lift
+  prevention).
+- Full requirements-traceability reconciliation: every spec requirement (incl. SEC, the
+  remaining SES, GOV inspection items, UNI, and the build-order meta-requirements) is now
+  mapped in `docs/RTM.csv`.
+
+## [0.1.4] - 2026-06
+
+### Added
+- GG20 type-7 fault attribution (`custody::type7`): a proof-valid run that still yields an
+  invalid signature is pinpointed to the party whose final share fails
+  `s_i·G == m·K_i + r·Σ_i`. Completes the GG20 identifiable-abort surface.
+
+## [0.1.3] - 2026-06
+
+### Added
+- GG20 identifiable abort: `gg20::sign_identifiable` attributes a bad modulus/range/
+  responder proof to the exact party (`AbortError`), and the echo-broadcast round
+  (`custody::echo`) localizes equivocation.
+
+## [0.1.2] - 2026-06
+
+### Added
+- GG20 responder consistency proof Π′ and Paillier-modulus proof Π_N, verified inside
+  every MtA.
+
+## [0.1.1] - 2026-06
+
+### Added
+- GG20 MtA initiator range proof Π (`custody::rangeproof`), verified inside every MtA.
+
+## [0.1.0] - 2026-06
+
+### Added
+- Complete 21-step build (Section 23): `secmem`, `bsv`, `ckd`, `cipher`, `keygraph`,
+  `overlay` (EP 4 046 048 B1), `broadcast` (GB 2623780 B), `session`, `custody`
+  (FROST + hand-rolled GG20 threshold ECDSA + Shamir reconstruction), `kst`, `obs`,
+  `api`, `res`, `cli`, `cmp`, `bench`, plus `proptests`, `conformance`, and fuzzing
+  (libFuzzer targets + a stable robustness fuzzer). Both inventions implemented in full;
+  `cargo test --all` green; clippy/fmt/`cargo doc -D warnings` clean; CycloneDX SBOM,
+  cargo-deny/audit, coverage/mutation, reproduce, and selftest gates wired into CI.
+- Step 1: Cargo workspace skeleton; pinned toolchain (rust-toolchain.toml, Rust 1.96.0);
+  Power-of-Ten clippy lint policy with `-D warnings`; `xtask` gate crate (banned-token,
+  function-size, RTM, SBOM); `deny.toml`; CI workflow; hardened Dockerfile + compose;
+  docs + `docs/RTM.csv` skeletons; `legacy/` preservation (REQ-GOV-070).

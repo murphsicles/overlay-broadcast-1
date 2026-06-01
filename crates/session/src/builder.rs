@@ -61,6 +61,14 @@ impl SessionTx {
     }
 }
 
+/// Whether the broadcaster may release the encrypted broadcast: only once **every**
+/// (sub-)session transaction has been successfully uploaded (REQ-SES-040, GB §6.5). With no
+/// transactions there is nothing to release.
+#[must_use]
+pub fn ready_to_release(uploaded: &[bool]) -> bool {
+    !uploaded.is_empty() && uploaded.iter().all(|&done| done)
+}
+
 /// Build a session transaction per GB Tables 1-2.
 ///
 /// # Errors
