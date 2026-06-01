@@ -135,10 +135,10 @@ REQ-FUZ-003,FUZ,T,TST-FUZ-003
 REQ-FUZ-004,FUZ,T,TST-FUZ-004
 REQ-FUZ-005,FUZ,T,TST-FUZ-005
 REQ-FUZ-006,FUZ,T,TST-FUZ-006
-REQ-CON-001,CON,T,TST-CON-001-ci-docker-image
-REQ-CON-002,CON,T,TST-CON-002-ci-docker-image
+REQ-CON-001,CON,T,TST-CON-001-verified-deployment-md
+REQ-CON-002,CON,T,TST-CON-002-verified-deployment-md
 REQ-CON-010,CON,D,artifact-compose-offline-node
-REQ-CON-011,CON,D,artifact-compose-test-profile
+REQ-CON-011,CON,D,verified-deployment-md
 REQ-CON-020,CON,T,TST-CON-020
 REQ-CON-021,CON,T,gate-deny-audit-ci
 REQ-CMP-001,CMP,T,TST-CMP-001
@@ -154,7 +154,7 @@ REQ-TST-001,TST,T,gate-cargo-test-all
 REQ-TST-002,TST,T,TST-TST-002
 REQ-TST-010,TST,T,gate-coverage-ci
 REQ-TST-011,TST,T,gate-mutation-ci
-REQ-TST-012,TST,T,TST-TST-012
+REQ-TST-012,TST,T,TST-TST-012-incl-teranode
 REQ-TST-050,TST,I,artifact-ignore-naming-discipline
 REQ-DOC-001,DOC,I,artifact-readme-md
 REQ-DOC-002,DOC,I,artifact-architecture-md

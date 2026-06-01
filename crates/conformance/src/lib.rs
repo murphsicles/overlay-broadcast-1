@@ -111,4 +111,32 @@ mod tests {
             "external BSV SDK / Teranode acceptance fixtures are not present in this environment"
         );
     }
+
+    // TST-TST-012 (Teranode genuine-data acceptance): validate our header parser/hasher
+    // against a GENUINE block header returned by a live (or recorded) Teranode node — our
+    // recomputed block hash must equal the hash the node reports, and the header must
+    // round-trip byte-identically. Run with the env vars set from a real
+    // `getblockheader <hash> false` / `getbestblockhash` response (REQ-TST-012, "Teranode
+    // where configured"). `#[ignore]` without the node.
+    #[test]
+    #[ignore = "REQ-TST-012: set TERANODE_HEADER_HEX and TERANODE_BLOCK_HASH from a live/recorded Teranode getblockheader response"]
+    fn tst_tst_012_teranode_genuine_header() {
+        use bsv::{bytes_to_hex, hex_to_bytes, BlockHeader};
+        let header_hex = std::env::var("TERANODE_HEADER_HEX").expect("TERANODE_HEADER_HEX");
+        let expected_hash = std::env::var("TERANODE_BLOCK_HASH").expect("TERANODE_BLOCK_HASH");
+        let raw = hex_to_bytes(&header_hex).unwrap();
+        let header = BlockHeader::parse(&raw).unwrap();
+        // our double-SHA-256 block hash (display order) equals the node's reported hash
+        assert_eq!(
+            header.block_hash().to_display_hex(),
+            expected_hash,
+            "block hash matches genuine Teranode response"
+        );
+        // and the header round-trips byte-identically through our serializer
+        assert_eq!(
+            bytes_to_hex(&header.serialize()),
+            header_hex,
+            "header re-serializes byte-identically"
+        );
+    }
 }

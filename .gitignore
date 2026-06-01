@@ -9,3 +9,4 @@
 /docs/sbom.cyclonedx.json
 # Scratch gate output.
 tasks_*.out
+tmp_*.sh

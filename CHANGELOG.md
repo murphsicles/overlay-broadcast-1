@@ -4,6 +4,18 @@ Semantic versioning (REQ-GOV-080). Keep-a-changelog format.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06
+
+### Verified
+- Enterprise Docker proven end-to-end on a real Linux engine (`docs/DEPLOYMENT_VERIFICATION.md`):
+  hardened 39.4 MB distroless image (non-root, read-only rootfs, all caps dropped, no shell,
+  healthcheck) with `selftest`/`reproduce` passing; the in-container `test` profile runs the
+  full suite + `xtask all` (192-component SBOM) + reproduce + selftest, all green
+  (REQ-CON-001/002/011).
+- External genuine-data conformance against a **live Teranode v0.15.1 node** (REQ-TST-012):
+  our `bsv` header parser + double-SHA-256 reproduce the node's reported block hash exactly
+  (`tst_tst_012_teranode_genuine_header`).
+
 ## [0.2.0] - 2026-06
 
 ### Added
